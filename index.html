@@ -795,7 +795,7 @@
             const random = Math.random();
             let prize;
             
-            if (random < 0.8) { // 80% шанс на легендарный
+            if (random < 0.5) { // 80% шанс на легендарный
                 const legendaryPrizes = allPrizes.filter(p => p.type === "legendary");
                 prize = legendaryPrizes[Math.floor(Math.random() * legendaryPrizes.length)];
             } else {
